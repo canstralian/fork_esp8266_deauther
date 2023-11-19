@@ -183,12 +183,10 @@ def normalize_rgb_colors_to_hex(css):
     """Convert `rgb(51,102,153)` to `#336699`."""
     log.debug("Converting all rgba to hexadecimal color values.")
     regex = re.compile(r"rgb\s*\(\s*([0-9,\s]+)\s*\)")
-    match = regex.search(css)
-    while match:
+    while match := regex.search(css):
         colors = map(lambda s: s.strip(), match.group(1).split(","))
         hexcolor = '#%.2x%.2x%.2x' % tuple(map(int, colors))
         css = css.replace(match.group(), hexcolor)
-        match = regex.search(css)
     return css
 
 
@@ -301,7 +299,7 @@ def condense_border_none(css):
 def add_encoding(css):
     """Add @charset 'UTF-8'; if missing."""
     log.debug("Adding encoding declaration if needed.")
-    return "@charset utf-8;" + css if "@charset" not in css.lower() else css
+    return f"@charset utf-8;{css}" if "@charset" not in css.lower() else css
 
 
 def restore_needed_space(css):

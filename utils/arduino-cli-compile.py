@@ -60,13 +60,13 @@ for board in boards:
         print("Already compiled")
         continue
 
-    os.system(f"arduino-cli cache clean")
+    os.system("arduino-cli cache clean")
     command = f"arduino-cli compile --fqbn deauther:esp8266:generic --build-property \"build.extra_flags=-DESP8266 -D{board}\" --output-dir {folder}"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
     os.system(
         f"mv {folder}/esp8266_deauther.ino.bin {folder}/esp8266_deauther_{version}_{board}.bin")
-    print(f"OK")
+    print("OK")
 
 os.system(f"rm {folder}/esp8266_deauther.ino.elf")
 os.system(f"rm {folder}/esp8266_deauther.ino.map")
