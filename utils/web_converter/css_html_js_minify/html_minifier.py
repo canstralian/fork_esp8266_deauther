@@ -28,7 +28,7 @@ def condense_html_whitespace(html):
         if (i + 1) % 2 == 0:
             tag = rawtag(split[i])
             if tag.startswith('/'):
-                if not tagsStack or '/' + tagsStack.pop() != tag:
+                if not tagsStack or f'/{tagsStack.pop()}' != tag:
                     raise Exception("Some tag is not closed properly")
             else:
                 tagsStack.append(tag)
@@ -132,7 +132,7 @@ def unquote_html_attributes(html):
         for each in space1.findall(tag) + space6.findall(tag):
             tag = tag.replace(each, space.sub(' ', each))
         for each in space4.findall(tag):
-            tag = tag.replace(each, each[0] + ' ' + each[1:].lstrip())
+            tag = tag.replace(each, f'{each[0]} {each[1:].lstrip()}')
         # remove quotes on some attributes
         tag = quotes_in_tag.sub(r'\1=\2 ', tag)  # See Bug #28
         if original != tag:  # has the tag been improved ?

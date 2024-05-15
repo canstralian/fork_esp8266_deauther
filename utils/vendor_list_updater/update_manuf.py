@@ -15,7 +15,7 @@ vendors = []
 tempVendors = []
 
 def padhex(s):
-    return '0x' + s[2:].zfill(2)
+    return f'0x{s[2:].zfill(2)}'
 
 def parse_options():
     parser = argparse.ArgumentParser()
@@ -23,9 +23,7 @@ def parse_options():
     parser.add_argument("-s", "--small", action='store_true', help="Generate small file only with most used 10 000 macs")
     parser.add_argument("-u", "--url", help="Wireshark oui/manuf file url")
 
-    opt = parser.parse_args()
-
-    return opt
+    return parser.parse_args()
 
 def generate_lists(url, output, small):
 
@@ -33,11 +31,7 @@ def generate_lists(url, output, small):
     global vendors
     global macs
 
-    if url:
-        data = urlopen(url)
-    else:
-        data = urlopen(WS_MANUF_FILE_URL)
-
+    data = urlopen(url) if url else urlopen(WS_MANUF_FILE_URL)
     lines = data.readlines()
 
     for line in lines:
@@ -45,20 +39,19 @@ def generate_lists(url, output, small):
         if line.startswith('#') or line.startswith('\n'):
             continue
         mac, short_desc, *rest = line.strip().split('\t')
-        short_desc = short_desc[0:8]
+        short_desc = short_desc[:8]
         short_desc = short_desc.encode("ascii", "ignore").decode()
         mac_octects = len(mac.split(':'))
         if mac_octects == 6:
             continue
-        else:
-            inList = False
-            for vendor in tempVendors:
-                if vendor[0] == short_desc:
-                    inList = True
-                    vendor[1] += 1
-                    break
-            if not inList:
-                tempVendors.append([short_desc, 1])
+        inList = False
+        for vendor in tempVendors:
+            if vendor[0] == short_desc:
+                inList = True
+                vendor[1] += 1
+                break
+        if not inList:
+            tempVendors.append([short_desc, 1])
 
     if small:
         tempVendors.sort(key=lambda x: x[1])
@@ -73,16 +66,15 @@ def generate_lists(url, output, small):
         if line.startswith('#') or line.startswith('\n'):
             continue
         mac, short_desc, *rest = line.strip().split('\t')
-        short_desc = short_desc[0:8]
+        short_desc = short_desc[:8]
         short_desc = short_desc.encode("ascii", "ignore").decode()
         mac_octects = len(mac.split(':'))
         if mac_octects == 6:
             continue
-        else:
-            for vendor in vendors:
-                if vendor == short_desc:
-                    index = vendors.index(vendor)
-                    macs.append([mac, index])
+        for vendor in vendors:
+            if vendor == short_desc:
+                index = vendors.index(vendor)
+                macs.append([mac, index])
 
     generate_files(output)
 
@@ -97,7 +89,7 @@ def generate_files(output):
     for vendor in vendors:
         vendor = vendor.ljust(8, '\0')
         hex_vendor = ", 0x".join("{:02x}".format(ord(c)) for c in vendor)
-        line = "0x" + hex_vendor
+        line = f"0x{hex_vendor}"
         vendorsTxt += line + ",\n"
     vendorsTxt = vendorsTxt[:-2] + "\n"
 
@@ -114,13 +106,11 @@ def generate_files(output):
                 byte = num % 0x100
                 index_bytes.append(byte)
                 num //= 0x100
-            hex_index = ""
-            for byte in index_bytes:
-                hex_index += padhex(hex(byte)) + ", "
+            hex_index = "".join(f"{padhex(hex(byte))}, " for byte in index_bytes)
             hex_index = hex_index[:-2]
         else:
-            hex_index = padhex(hex(vendorindex)) + ", 0x00"
-        line = "0x" + oc1.upper() + ", " + "0x" + oc2.upper() + ", " + "0x" + oc3.upper() + ", " + hex_index
+            hex_index = f"{padhex(hex(vendorindex))}, 0x00"
+        line = f"0x{oc1.upper()}, 0x{oc2.upper()}, 0x{oc3.upper()}, {hex_index}"
         macsTxt += line + ",\n"
     macsTxt = macsTxt[:-2] + "\n"
 
